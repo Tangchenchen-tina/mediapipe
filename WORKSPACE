@@ -94,15 +94,15 @@ http_archive(
 )
 
 # Maven dependencies.
-RULES_JVM_EXTERNAL_TAG = "5.2"
+RULES_JVM_EXTERNAL_TAG = "6.1"
 
-RULES_JVM_EXTERNAL_SHA = "f86fd42a809e1871ca0aabe89db0d440451219c3ce46c58da240c7dcdc00125f"
+RULES_JVM_EXTERNAL_SHA = "08ea921df02ffe9924123b0686dc04fd0ff875710bfadb7ad42badb931b0fd50"
 
 http_archive(
     name = "rules_jvm_external",
     sha256 = RULES_JVM_EXTERNAL_SHA,
     strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/%s/rules_jvm_external-%s.tar.gz" % (RULES_JVM_EXTERNAL_TAG, RULES_JVM_EXTERNAL_TAG),
+    url = "https://github.com/bazel-contrib/rules_jvm_external/releases/download/%s/rules_jvm_external-%s.tar.gz" % (RULES_JVM_EXTERNAL_TAG, RULES_JVM_EXTERNAL_TAG),
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
@@ -174,9 +174,9 @@ http_archive(
 http_archive(
     name = "XNNPACK",
     # `curl -L <url> | shasum -a 256`
-    sha256 = "7235b2b55fbf11b64f38db130efae0f293d2d6d6fd90613221b598a8847f41c5",
-    strip_prefix = "XNNPACK-68167d1fefa50296f0588ec280f48c58357ca898",
-    url = "https://github.com/google/XNNPACK/archive/68167d1fefa50296f0588ec280f48c58357ca898.zip",
+    sha256 = "44bf8a258cfd0d7b500b6058a2bb5c7387c8cebba295cfca985a68d16513f7c8",
+    strip_prefix = "XNNPACK-25b42dfddb0ee22170d73ff0d4b333ea1e6edfeb",
+    url = "https://github.com/google/XNNPACK/archive/25b42dfddb0ee22170d73ff0d4b333ea1e6edfeb.zip",
 )
 
 http_archive(
@@ -208,13 +208,15 @@ http_archive(
     ],
 )
 
-# KleidiAI is needed to get the best possible performance out of XNNPack, from 2025-09-08
+# KleidiAI is needed to get the best possible performance out of XNNPack.
+# Kept in sync with the KleidiAI version XNNPACK itself pins - see
+# cmake/DownloadKleidiAI.cmake at the XNNPACK commit above.
 http_archive(
     name = "KleidiAI",
-    sha256 = "42155cfc084bf1f80e9ef486470f949502ea8d1b845b2f1bebd58978a1b540aa",
-    strip_prefix = "kleidiai-8ca226712975f24f13f71d04cda039a0ee9f9e2f",
+    sha256 = "5e922c9afb7a0c881fc4359b58488f3faa840e8435de1a2207a6525935ed83c2",
+    strip_prefix = "kleidiai-63205aa90afa6803d8f58bc3081b69288e9f1906",
     urls = [
-        "https://github.com/ARM-software/kleidiai/archive/8ca226712975f24f13f71d04cda039a0ee9f9e2f.zip",
+        "https://github.com/ARM-software/kleidiai/archive/63205aa90afa6803d8f58bc3081b69288e9f1906.zip",
     ],
 )
 
@@ -228,22 +230,22 @@ http_archive(
     ],
 )
 
-# pthreadpool is a dependency of XNNPACK, from 2025-09-08
+# pthreadpool is a dependency of XNNPACK.
 http_archive(
     name = "pthreadpool",
     # `curl -L <url> | shasum -a 256`
-    sha256 = "d5a78b017839ee0474e6aef6e21742b03f641b260f29faf9538a0a6b8fae0704",
-    strip_prefix = "pthreadpool-995229919303dd98c0f1b3b585b54527067ef893",
-    urls = ["https://github.com/google/pthreadpool/archive/995229919303dd98c0f1b3b585b54527067ef893.zip"],
+    sha256 = "f602ab141bdc5d5872a79d6551e9063b5bfa7ad6ad60cceaa641de5c45c86d70",
+    strip_prefix = "pthreadpool-0e6ca13779b57d397a5ba6bfdcaa8a275bc8ea2e",
+    urls = ["https://github.com/google/pthreadpool/archive/0e6ca13779b57d397a5ba6bfdcaa8a275bc8ea2e.zip"],
 )
 
-# TF on 2025-07-01
+# TF v2.21.0
 # org_tensorflow depends on Eigen, XNNPACK, MediaPipe - as well and has explicit dependency in this
 # WORKSPACE. If updating tensorflow version, make sure to bump Eigen version as well and vice versa.
-_TENSORFLOW_GIT_COMMIT = "fad6b3cf5a7d51a437bd01ee929853bc8554b618"
+_TENSORFLOW_GIT_COMMIT = "a481b10260dfdf833a1b16007eead49c1d7febf3"
 
 # curl -L https://github.com/tensorflow/tensorflow/archive/<COMMIT>.tar.gz | shasum -a 256
-_TENSORFLOW_SHA256 = "2b5028c480ea8029701056f8ddb80ce12ba31c9cf402183107cbb34d2db899e8"
+_TENSORFLOW_SHA256 = "6438396f3b19af5d7ad787cf041f857af7505916dc08092e20b07d1b1f8df492"
 
 http_archive(
     name = "org_tensorflow",
@@ -254,10 +256,10 @@ http_archive(
         "@//third_party:org_tensorflow_c_api_experimental.diff",
         # Diff is generated with a script, don't update it manually.
         "@//third_party:org_tensorflow_custom_ops.diff",
-        # Works around Bazel issue with objc_library.
-        # See https://github.com/bazelbuild/bazel/issues/19912
-        "@//third_party:org_tensorflow_objc_build_fixes.diff",
-        "@//third_party:org_tensorflow_verifier_int4.diff",
+        # Works around a bzlmod canonical-name bug in tflite_combine_cc_tests
+        # (tensorflow/lite/build_def.bzl) that duplicates //:link_extra_lib
+        # in generated test targets under a single_version_override'd rules_cc.
+        "@//third_party:org_tensorflow_combine_cc_tests_link_extra_lib.diff",
     ],
     sha256 = _TENSORFLOW_SHA256,
     strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,
@@ -306,6 +308,17 @@ install_deps()
 load("@org_tensorflow//tensorflow:workspace2.bzl", "tf_workspace2")
 
 tf_workspace2()
+
+# LLVM/MLIR, needed by tensorflow/compiler/mlir/lite (e.g. metadata tooling
+# pulled in by mediapipe/tasks/c:libmediapipe). This is normally set up by
+# tf_workspace1(), but that macro also unconditionally calls grpc_deps(),
+# benchmark_deps(), and closure_repositories(), which collide with
+# repositories this WORKSPACE already defines explicitly above. @xla and its
+# @llvm-raw/@local_config_python prerequisites are already established by
+# tf_workspace2() above, so just call the one macro we actually need.
+load("@xla//third_party/llvm:setup.bzl", "llvm_setup")
+
+llvm_setup(name = "llvm-project")
 
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
@@ -434,10 +447,10 @@ http_archive(
 http_archive(
     name = "darts_clone",
     build_file = "@//third_party:darts_clone.BUILD",
-    sha256 = "c97f55d05c98da6fcaf7f9ecc6a6dc6bc5b18b8564465f77abff8879d446491c",
-    strip_prefix = "darts-clone-e40ce4627526985a7767444b6ed6893ab6ff8983",
+    sha256 = "96946b2c1ec2a6e171665c5b5b3ec52fc27c325c80e0c957a415bb4c5145e7df",
+    strip_prefix = "darts-clone-87b71afd6cf784953e3c08f24c64203397f3b724",
     urls = [
-        "https://github.com/s-yata/darts-clone/archive/e40ce4627526985a7767444b6ed6893ab6ff8983.zip",
+        "https://github.com/s-yata/darts-clone/archive/87b71afd6cf784953e3c08f24c64203397f3b724.zip",
     ],
 )
 
@@ -446,13 +459,22 @@ http_archive(
     patch_args = ["-p1"],
     patches = [
         "@//third_party:tensorflow_text_remove_tf_deps.diff",
-        "@//third_party:tensorflow_text_a0f49e63.diff",
+        # tftext.bzl unconditionally loads pybind_extension/pywrap_binaries/
+        # pywrap_library from "@local_xla//third_party/py/rules_pywrap", a
+        # repo name org_tensorflow's own build wires up internally for its
+        # Python-wheel packaging but that this WORKSPACE never defines (and
+        # that pulls in a large, unrelated dependency chain). None of the
+        # cc_library targets this WORKSPACE actually uses from
+        # org_tensorflow_text (regex_split, wordpiece_tokenizer, ...) call
+        # py_tf_text_library, so the load is dead weight - stub it out
+        # instead of standing up a "local_xla" repo just for this.
+        "@//third_party:tensorflow_text_stub_pywrap.diff",
     ],
     repo_mapping = {"@com_google_re2": "@com_googlesource_code_re2"},
-    sha256 = "f64647276f7288d1b1fe4c89581d51404d0ce4ae97f2bcc4c19bd667549adca8",
-    strip_prefix = "text-2.2.0",
+    sha256 = "e08834bed6f544be9cc0315895898bf48d94b8090bca993ab45526329df291c8",
+    strip_prefix = "text-2.20.0",
     urls = [
-        "https://github.com/tensorflow/text/archive/v2.2.0.zip",
+        "https://github.com/tensorflow/text/archive/refs/tags/v2.20.0.zip",
     ],
 )
 
@@ -495,7 +517,7 @@ new_local_repository(
     # For local MacOS builds, the path should point to an opencv@3 installation.
     # If you edit the path here, you will also need to update the corresponding
     # prefix in "opencv_macos.BUILD".
-    path = "/usr/local",  # e.g. /usr/local/Cellar for HomeBrew
+    path = "/opt/homebrew/Cellar",  # e.g. /usr/local/Cellar for HomeBrew
 )
 
 new_local_repository(
@@ -575,12 +597,15 @@ http_archive(
     url = "https://github.com/google/google-toolbox-for-mac/archive/v2.2.1.zip",
 )
 
+# Pin kept identical to the rules_ml_toolchain version org_tensorflow itself
+# vendors in third_party/xla/workspace0.bzl - see that file's fully-qualified
+# http_archive definition when bumping the org_tensorflow version above.
 http_archive(
     name = "rules_ml_toolchain",
-    sha256 = "de3b14418657eeacd8afc2aa89608be6ec8d66cd6a5de81c4f693e77bc41bee1",
-    strip_prefix = "rules_ml_toolchain-5653e5a0ca87c1272069b4b24864e55ce7f129a1",
+    sha256 = "54c1a357f71f611efdb4891ebd4bcbe4aeb6dfa7e473f14fd7ecad5062096616",
+    strip_prefix = "rules_ml_toolchain-d8cb9c2c168cd64000eaa6eda0781a9615a26ffe",
     urls = [
-        "https://github.com/google-ml-infra/rules_ml_toolchain/archive/5653e5a0ca87c1272069b4b24864e55ce7f129a1.tar.gz",
+        "https://github.com/google-ml-infra/rules_ml_toolchain/archive/d8cb9c2c168cd64000eaa6eda0781a9615a26ffe.tar.gz",
     ],
 )
 
@@ -591,9 +616,21 @@ load(
 
 python_wheel_version_suffix_repository(name = "tf_wheel_version_suffix")
 
+# Hermetic C++
+# Must be initialized before any CUDA/SYCL initialization below - see
+# https://github.com/google-ml-infra/rules_ml_toolchain/blob/main/README.md
+load(
+    "@rules_ml_toolchain//cc/deps:cc_toolchain_deps.bzl",
+    "cc_toolchain_deps",
+)
+
+cc_toolchain_deps()
+
+register_toolchains("@rules_ml_toolchain//cc:linux_x86_64_linux_x86_64")
+
 # Hermetic CUDA
 load(
-    "@rules_ml_toolchain//third_party/gpus/cuda/hermetic:cuda_json_init_repository.bzl",
+    "@rules_ml_toolchain//gpu/cuda:cuda_json_init_repository.bzl",
     "cuda_json_init_repository",
 )
 
@@ -605,7 +642,7 @@ load(
     "CUDNN_REDISTRIBUTIONS",
 )
 load(
-    "@rules_ml_toolchain//third_party/gpus/cuda/hermetic:cuda_redist_init_repositories.bzl",
+    "@rules_ml_toolchain//gpu/cuda:cuda_redist_init_repositories.bzl",
     "cuda_redist_init_repositories",
     "cudnn_redist_init_repository",
 )
@@ -619,18 +656,11 @@ cudnn_redist_init_repository(
 )
 
 load(
-    "@rules_ml_toolchain//third_party/gpus/cuda/hermetic:cuda_configure.bzl",
+    "@rules_ml_toolchain//gpu/cuda:cuda_configure.bzl",
     "cuda_configure",
 )
 
 cuda_configure(name = "local_config_cuda")
-
-load(
-    "@rules_ml_toolchain//cc_toolchain/deps:cc_toolchain_deps.bzl",
-    "cc_toolchain_deps",
-)
-
-cc_toolchain_deps()
 
 # Edge TPU
 http_archive(
@@ -661,9 +691,9 @@ wasm_files()
 # Eigen
 # org_tensorflow depends on Eigen. If updating tensorflow version,
 # make sure to bump Eigen version as well and vice versa.
-EIGEN_COMMIT = "4c38131a16803130b66266a912029504f2cf23cd"
+EIGEN_COMMIT = "dcbaf2d608f306450f1e74949eb87e9a22a7ef4b"
 
-EIGEN_SHA256 = "1a432ccbd597ea7b9faa1557b1752328d6adc1a3db8969f6fe793ff704be3bf0"
+EIGEN_SHA256 = "a71517b3815984c1a8174db1ebc58a17d4f5c23c06e377bbc4a5dfc85855a516"
 
 http_archive(
     name = "eigen",
