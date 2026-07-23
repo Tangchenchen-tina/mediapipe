@@ -174,9 +174,14 @@ http_archive(
 http_archive(
     name = "XNNPACK",
     # `curl -L <url> | shasum -a 256`
-    sha256 = "44bf8a258cfd0d7b500b6058a2bb5c7387c8cebba295cfca985a68d16513f7c8",
-    strip_prefix = "XNNPACK-25b42dfddb0ee22170d73ff0d4b333ea1e6edfeb",
-    url = "https://github.com/google/XNNPACK/archive/25b42dfddb0ee22170d73ff0d4b333ea1e6edfeb.zip",
+    # Bumped to match what @litert (LiteRT v2.1.6's own pinned org_tensorflow,
+    # commit bcdab1a62e138c8f8784a7477c0be8af6dd0bd0a) expects - its
+    # tflite/delegates/xnnpack code uses newer XNNPACK API (qint2/qint4,
+    # xnn_define_static_constant_pad_v2) than mediapipe's org_tensorflow
+    # v2.21.0 pin's own XNNPACK version had.
+    sha256 = "13ae01126b6d4a8b6769433c2a942d6204a3f97157d9c83d79cbfeec1041398c",
+    strip_prefix = "XNNPACK-53a1797ba4360cbde068f2a984652be0f0b7b6fe",
+    url = "https://github.com/google/XNNPACK/archive/53a1797ba4360cbde068f2a984652be0f0b7b6fe.zip",
 )
 
 http_archive(
@@ -213,20 +218,21 @@ http_archive(
 # cmake/DownloadKleidiAI.cmake at the XNNPACK commit above.
 http_archive(
     name = "KleidiAI",
-    sha256 = "5e922c9afb7a0c881fc4359b58488f3faa840e8435de1a2207a6525935ed83c2",
-    strip_prefix = "kleidiai-63205aa90afa6803d8f58bc3081b69288e9f1906",
+    # KleidiAI moved hosting from GitHub (ARM-software/kleidiai) to
+    # gitlab.arm.com/kleidi/kleidiai as of this XNNPACK version.
+    sha256 = "b147799b94c51f5e57492930bfd9e5294fb7ffe44fee1dbcd3f8048adeedd5e3",
+    strip_prefix = "kleidiai-b87ef9c94f45f11c81a6b1fdaed1b2b45ea58c0c",
     urls = [
-        "https://github.com/ARM-software/kleidiai/archive/63205aa90afa6803d8f58bc3081b69288e9f1906.zip",
+        "https://gitlab.arm.com/kleidi/kleidiai/-/archive/b87ef9c94f45f11c81a6b1fdaed1b2b45ea58c0c/kleidiai-b87ef9c94f45f11c81a6b1fdaed1b2b45ea58c0c.zip",
     ],
 )
 
-# 2025-09-08
 http_archive(
     name = "cpuinfo",
-    sha256 = "c0254ce97f7abc778dd2df0aaca1e0506dba1cd514fdb9fe88c07849393f8ef4",
-    strip_prefix = "cpuinfo-8a9210069b5a37dd89ed118a783945502a30a4ae",
+    sha256 = "9213f6f81784eb8679f0621ad1c20eac711e063cb9c7712738720609cbdf1c33",
+    strip_prefix = "cpuinfo-ea6b9f1bb6e1001d8b21574d5bc78ddef62e499d",
     urls = [
-        "https://github.com/pytorch/cpuinfo/archive/8a9210069b5a37dd89ed118a783945502a30a4ae.zip",
+        "https://github.com/pytorch/cpuinfo/archive/ea6b9f1bb6e1001d8b21574d5bc78ddef62e499d.zip",
     ],
 )
 
@@ -234,9 +240,9 @@ http_archive(
 http_archive(
     name = "pthreadpool",
     # `curl -L <url> | shasum -a 256`
-    sha256 = "f602ab141bdc5d5872a79d6551e9063b5bfa7ad6ad60cceaa641de5c45c86d70",
-    strip_prefix = "pthreadpool-0e6ca13779b57d397a5ba6bfdcaa8a275bc8ea2e",
-    urls = ["https://github.com/google/pthreadpool/archive/0e6ca13779b57d397a5ba6bfdcaa8a275bc8ea2e.zip"],
+    sha256 = "5ab4e8f63e3dcf62048360c216532bdf62f00dc204883a52d91230402f0feb6a",
+    strip_prefix = "pthreadpool-02460584c6092e527c8b89f7df4de143d70e801f",
+    urls = ["https://github.com/google/pthreadpool/archive/02460584c6092e527c8b89f7df4de143d70e801f.zip"],
 )
 
 # TF v2.21.0
@@ -691,9 +697,9 @@ wasm_files()
 # Eigen
 # org_tensorflow depends on Eigen. If updating tensorflow version,
 # make sure to bump Eigen version as well and vice versa.
-EIGEN_COMMIT = "dcbaf2d608f306450f1e74949eb87e9a22a7ef4b"
+EIGEN_COMMIT = "ea13a98decd497a8c5588fb5de71b57bcf10d864"
 
-EIGEN_SHA256 = "a71517b3815984c1a8174db1ebc58a17d4f5c23c06e377bbc4a5dfc85855a516"
+EIGEN_SHA256 = "35c6126e246585d9cf6600b65471582c2701aae64b784a6fd19168a90cfc841e"
 
 http_archive(
     name = "eigen",
@@ -799,4 +805,66 @@ http_archive(
     sha256 = "d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0",
     strip_prefix = "curl-8.10.1",
     url = "https://curl.haxx.se/download/curl-8.10.1.tar.gz",
+)
+
+# Needed by @litert//litert/c/... (device/platform-targeted test filtering).
+# Not defined anywhere else in this WORKSPACE - genuinely new, not a
+# collision, so pulled in directly rather than via LiteRT's own WORKSPACE.
+http_archive(
+    name = "rules_platform",
+    sha256 = "0aadd1bd350091aa1f9b6f2fbcac8cd98201476289454e475b28801ecf85d3fd",
+    url = "https://github.com/bazelbuild/rules_platform/releases/download/0.1.0/rules_platform-0.1.0.tar.gz",
+)
+
+# LiteRT (TFLite's successor project, split out of tensorflow/tensorflow).
+# Scoped intentionally: this WORKSPACE does NOT call LiteRT's own WORKSPACE
+# macros (tf_workspace0-3, its own maven_install, etc.) - those redefine
+# org_tensorflow, darts_clone, rules_kotlin, platforms, and several other
+# repos this WORKSPACE already provides, which would collide outright.
+# Instead this fetches just the LiteRT source tree, and its BUILD files'
+# external references (@org_tensorflow, @xla, @eigen_archive, @ruy, @tsl,
+# @flatbuffers, @com_google_absl, @com_google_googletest, @platforms,
+# @rules_cc, @bazel_skylib) resolve against what's already defined above -
+# verified via `bazel query @litert//tflite/core:framework_stable`.
+#
+# IMPORTANT: LiteRT's tflite/ code lives in `namespace tflite`, the same
+# namespace org_tensorflow's tensorflow/lite uses. Do not link both
+# @litert and @org_tensorflow's tensorflow/lite targets into the same
+# binary - that's a duplicate-symbol/ODR risk, not just a Bazel-level one.
+# Keep any @litert-dependent calculator out of targets (like
+# //mediapipe/tasks/c:libmediapipe) that already pull in
+# @org_tensorflow//tensorflow/lite/....
+http_archive(
+    name = "litert",
+    # LiteRT's BUILD/bzl files load py_test/py_library/py_binary from
+    # "@xla//third_party/rules_python/python:*.bzl", a path that doesn't
+    # exist at mediapipe's pinned org_tensorflow/XLA commit (LiteRT expects a
+    # newer XLA layout). XLA's wrapper also adds a strict_deps attribute
+    # standard rules_python doesn't have, so redirect to a small in-repo
+    # compat shim (rules_python_compat.bzl) that drops strict_deps and
+    # delegates to mediapipe's own working @rules_python, rather than trying
+    # to reconcile XLA versions.
+    patch_cmds = [
+        "cat > rules_python_compat.bzl <<'EOF'\n" +
+        "load(\"@rules_python//python:defs.bzl\", _py_binary = \"py_binary\", _py_library = \"py_library\", _py_test = \"py_test\")\n" +
+        "\n" +
+        "def py_binary(strict_deps = None, **kwargs):\n" +
+        "    _py_binary(**kwargs)\n" +
+        "\n" +
+        "def py_library(strict_deps = None, **kwargs):\n" +
+        "    _py_library(**kwargs)\n" +
+        "\n" +
+        "def py_test(strict_deps = None, **kwargs):\n" +
+        "    _py_test(**kwargs)\n" +
+        "EOF",
+        "find . -type f \\( -name '*.bzl' -o -name 'BUILD' \\) -exec grep -l '@xla//third_party/rules_python/python:py_' {} \\; | xargs sed -i.bak -E 's#@xla//third_party/rules_python/python:py_(test|library|binary)\\.bzl#//:rules_python_compat.bzl#g' && find . -name '*.bak' -delete",
+        # strict_deps is also passed directly to org_tensorflow's own
+        # py_test/py_library/py_binary macros (tensorflow.bzl), which
+        # mediapipe's pinned org_tensorflow version doesn't accept either.
+        # It's a lint-only attribute, safe to drop.
+        "find . -type f \\( -name '*.bzl' -o -name 'BUILD' \\) -exec grep -l 'strict_deps' {} \\; | xargs sed -i.bak -E '/^[[:space:]]*strict_deps = (True|False),[[:space:]]*$/d' && find . -name '*.bak' -delete",
+    ],
+    sha256 = "f95fa96332c56b7103db7a02ab4edab845949c196a986db55bddaa70539ee45b",
+    strip_prefix = "LiteRT-2.1.6",
+    urls = ["https://github.com/google-ai-edge/LiteRT/archive/refs/tags/v2.1.6.tar.gz"],
 )
