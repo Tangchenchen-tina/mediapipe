@@ -625,14 +625,30 @@ python_wheel_version_suffix_repository(name = "tf_wheel_version_suffix")
 # Hermetic C++
 # Must be initialized before any CUDA/SYCL initialization below - see
 # https://github.com/google-ml-infra/rules_ml_toolchain/blob/main/README.md
+#
+# Deliberately NOT calling register_toolchains("@rules_ml_toolchain//cc:...")
+# here, unlike the README's full example. That registers a hermetic,
+# ML/CUDA-focused sysroot as a candidate for Bazel's toolchain resolution
+# for the linux_x86_64/linux_x86_64 exec+target platform - identical
+# constraints to whatever toolchain normally handles a plain Linux build.
+# When both satisfy the same constraints, Bazel picks by registration
+# order, so on an actual Linux x86_64 build machine this toolchain can win
+# over the intended one for ordinary target compiles (not just the
+# MLIR/tblgen host-tool builds cc_toolchain_deps() is actually needed for).
+# Its sysroot isn't a general-purpose one - it's missing normal system
+# graphics headers (EGL/GLES) mediapipe's GPU delegate needs, and is
+# hard-capped at C++17 with a stdlib incomplete enough that even
+# abseil's `#include <version>` (a real header, not a flag-gated one)
+# fails under C++20. Confirmed via testing: @llvm-project still resolves
+# and libmediapipe/@litert both still build without registering it, so
+# it was never load-bearing for what this WORKSPACE actually needs from
+# rules_ml_toolchain - it was carried over from the README's full pattern.
 load(
     "@rules_ml_toolchain//cc/deps:cc_toolchain_deps.bzl",
     "cc_toolchain_deps",
 )
 
 cc_toolchain_deps()
-
-register_toolchains("@rules_ml_toolchain//cc:linux_x86_64_linux_x86_64")
 
 # Hermetic CUDA
 load(
