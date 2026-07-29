@@ -1,6 +1,7 @@
-diff -ruN a/tensorflow_text/tftext.bzl b/tensorflow_text/tftext.bzl
---- a/tensorflow_text/tftext.bzl	2026-07-21 23:04:12
-+++ b/tensorflow_text/tftext.bzl	2026-07-21 23:04:12
+diff --git a/tensorflow_text/tftext.bzl b/tensorflow_text/tftext.bzl
+index e7a5b32..1259cef 100644
+--- a/tensorflow_text/tftext.bzl
++++ b/tensorflow_text/tftext.bzl
 @@ -1,12 +1,14 @@
  """
  Build rules for open source tf.text libraries.
