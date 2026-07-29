@@ -30,6 +30,9 @@ single_version_override(
 bazel_dep(name = "rules_kotlin", version = "1.9.6")
 bazel_dep(name = "rules_shell", version = "0.4.1")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
+
+# Needed by @litert//litert/c/... (device/platform-targeted test filtering).
+bazel_dep(name = "rules_platform", version = "0.1.0")
 bazel_dep(name = "aspect_rules_jasmine", version = "2.0.4")
 bazel_dep(name = "aspect_rules_js", version = "2.7.0")
 bazel_dep(name = "aspect_bazel_lib", version = "2.21.2")

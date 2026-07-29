@@ -823,15 +823,6 @@ http_archive(
     url = "https://curl.haxx.se/download/curl-8.10.1.tar.gz",
 )
 
-# Needed by @litert//litert/c/... (device/platform-targeted test filtering).
-# Not defined anywhere else in this WORKSPACE - genuinely new, not a
-# collision, so pulled in directly rather than via LiteRT's own WORKSPACE.
-http_archive(
-    name = "rules_platform",
-    sha256 = "0aadd1bd350091aa1f9b6f2fbcac8cd98201476289454e475b28801ecf85d3fd",
-    url = "https://github.com/bazelbuild/rules_platform/releases/download/0.1.0/rules_platform-0.1.0.tar.gz",
-)
-
 # LiteRT (TFLite's successor project, split out of tensorflow/tensorflow).
 # Scoped intentionally: this WORKSPACE does NOT call LiteRT's own WORKSPACE
 # macros (tf_workspace0-3, its own maven_install, etc.) - those redefine
@@ -852,33 +843,20 @@ http_archive(
 # @org_tensorflow//tensorflow/lite/....
 http_archive(
     name = "litert",
+    patch_args = ["-p1"],
     # LiteRT's BUILD/bzl files load py_test/py_library/py_binary from
     # "@xla//third_party/rules_python/python:*.bzl", a path that doesn't
     # exist at mediapipe's pinned org_tensorflow/XLA commit (LiteRT expects a
     # newer XLA layout). XLA's wrapper also adds a strict_deps attribute
-    # standard rules_python doesn't have, so redirect to a small in-repo
-    # compat shim (rules_python_compat.bzl) that drops strict_deps and
-    # delegates to mediapipe's own working @rules_python, rather than trying
-    # to reconcile XLA versions.
-    patch_cmds = [
-        "cat > rules_python_compat.bzl <<'EOF'\n" +
-        "load(\"@rules_python//python:defs.bzl\", _py_binary = \"py_binary\", _py_library = \"py_library\", _py_test = \"py_test\")\n" +
-        "\n" +
-        "def py_binary(strict_deps = None, **kwargs):\n" +
-        "    _py_binary(**kwargs)\n" +
-        "\n" +
-        "def py_library(strict_deps = None, **kwargs):\n" +
-        "    _py_library(**kwargs)\n" +
-        "\n" +
-        "def py_test(strict_deps = None, **kwargs):\n" +
-        "    _py_test(**kwargs)\n" +
-        "EOF",
-        "find . -type f \\( -name '*.bzl' -o -name 'BUILD' \\) -exec grep -l '@xla//third_party/rules_python/python:py_' {} \\; | xargs sed -i.bak -E 's#@xla//third_party/rules_python/python:py_(test|library|binary)\\.bzl#//:rules_python_compat.bzl#g' && find . -name '*.bak' -delete",
-        # strict_deps is also passed directly to org_tensorflow's own
-        # py_test/py_library/py_binary macros (tensorflow.bzl), which
-        # mediapipe's pinned org_tensorflow version doesn't accept either.
-        # It's a lint-only attribute, safe to drop.
-        "find . -type f \\( -name '*.bzl' -o -name 'BUILD' \\) -exec grep -l 'strict_deps' {} \\; | xargs sed -i.bak -E '/^[[:space:]]*strict_deps = (True|False),[[:space:]]*$/d' && find . -name '*.bak' -delete",
+    # standard rules_python doesn't have. This patch adds an in-repo compat
+    # shim (rules_python_compat.bzl) that drops strict_deps and delegates to
+    # mediapipe's own working @rules_python, redirects all the broken loads
+    # to it, and strips the now-inapplicable strict_deps call-site
+    # arguments (a lint-only attribute org_tensorflow's own
+    # py_test/py_library/py_binary macros don't accept either at mediapipe's
+    # pinned version) - rather than trying to reconcile XLA versions.
+    patches = [
+        "@//third_party:litert_rules_python_and_strict_deps.diff",
     ],
     sha256 = "f95fa96332c56b7103db7a02ab4edab845949c196a986db55bddaa70539ee45b",
     strip_prefix = "LiteRT-2.1.6",
